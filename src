@@ -1,1 +1,82 @@
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { SiteSettingsProvider, useSiteSettings } from "@/hooks/useSiteSettings";
+import { ToastProvider } from "@/hooks/useToast";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import AdminLayout from "@/components/layout/AdminLayout";
+import Home from "@/pages/Home";
+import Shop from "@/pages/Shop";
+import ProductDetail from "@/pages/ProductDetail";
+import About from "@/pages/About";
+import Contact from "@/pages/Contact";
+import NotFound from "@/pages/NotFound";
+import AdminLogin from "@/pages/admin/Login";
+import ProtectedRoute from "@/pages/admin/ProtectedRoute";
+import Dashboard from "@/pages/admin/Dashboard";
+import AdminProducts from "@/pages/admin/Products";
+import ProductForm from "@/pages/admin/ProductForm";
+import AdminCategories from "@/pages/admin/Categories";
+import AdminSettings from "@/pages/admin/Settings";
+import AdminFeedback from "@/pages/admin/Feedback";
+import { setSiteSeo } from "@/utils/seo";
+
+function StorefrontLayout({ children }: { children: React.ReactNode }) {
+  const { settings } = useSiteSettings();
+  useEffect(() => {
+    setSiteSeo(settings);
+  }, [settings]);
+
+  return (
+    <div dir="rtl" className="min-h-screen flex flex-col">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+export default function App() {
+  return (
+    <HashRouter>
+      <SiteSettingsProvider>
+        <ToastProvider>
+          <ScrollToTop />
+          <Routes>
+            {/* Storefront */}
+            <Route path="/" element={<StorefrontLayout><Home /></StorefrontLayout>} />
+            <Route path="/shop" element={<StorefrontLayout><Shop /></StorefrontLayout>} />
+            <Route path="/product/:slug" element={<StorefrontLayout><ProductDetail /></StorefrontLayout>} />
+            <Route path="/about" element={<StorefrontLayout><About /></StorefrontLayout>} />
+            <Route path="/contact" element={<StorefrontLayout><Contact /></StorefrontLayout>} />
+
+            {/* Admin */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route element={<ProtectedRoute />}>
+              <Route path="/admin" element={<AdminLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="products" element={<AdminProducts />} />
+                <Route path="products/new" element={<ProductForm />} />
+                <Route path="products/:id" element={<ProductForm />} />
+                <Route path="categories" element={<AdminCategories />} />
+                <Route path="settings" element={<AdminSettings />} />
+                <Route path="feedback" element={<AdminFeedback />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<StorefrontLayout><NotFound /></StorefrontLayout>} />
+          </Routes>
+        </ToastProvider>
+      </SiteSettingsProvider>
+    </HashRouter>
+  );
+}
 
