@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>صدا بده به کلمات — تبدیل متن به گفتار فارسی</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b2027;
+    --panel: #123138;
+    --panel-2: #163a42;
+    --line: #234750;
+    --turquoise: #2ec4b6;
+    --gold: #d9a44a;
+    --text: #ede6d6;
+    --muted: #8fa6a8;
+    --danger: #d97757;
+    --radius: 18px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(circle at 15% 0%, rgba(46,196,182,0.10), transparent 45%),
+      radial-gradient(circle at 90% 100%, rgba(217,164,74,0.08), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Vazirmatn', Tahoma, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:48px 20px 64px;
+  }
+  .wrap{width:100%; max-width:640px;}
+  .tag{
+    color:var(--turquoise);
+    font-size:14px;
+    font-weight:500;
+    margin:0 0 10px;
+    letter-spacing:0.2px;
+  }
+  h1{
+    font-size:clamp(28px,5vw,42px);
+    font-weight:900;
+    line-height:1.35;
+    margin:0 0 8px;
+    color:var(--text);
+  }
+  h1 span{color:var(--gold);}
+  .sub{
+    color:var(--muted);
+    font-size:15px;
+    line-height:1.8;
+    max-width:52ch;
+    margin:0 0 36px;
+  }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px;
+    margin-bottom:18px;
+  }
+  textarea{
+    width:100%;
+    min-height:160px;
+    resize:vertical;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    font-family:'Vazirmatn', Tahoma, sans-serif;
+    font-size:18px;
+    line-height:2;
+    padding:16px;
+    outline:none;
+  }
+  textarea:focus{border-color:var(--turquoise);}
+  textarea::placeholder{color:var(--muted);}
+  .charcount{
+    display:flex; justify-content:space-between;
+    font-size:12px; color:var(--muted); margin-top:8px;
+  }
+  .voices{
+    display:flex; gap:10px; margin-top:18px;
+  }
+  .voice-btn{
+    flex:1;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    color:var(--muted);
+    border-radius:12px;
+    padding:14px 10px;
+    font-family:inherit;
+    font-size:15px;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+    text-align:center;
+  }
+  .voice-btn .name{display:block; font-weight:700; font-size:16px; margin-bottom:2px;}
+  .voice-btn.active{
+    border-color:var(--turquoise);
+    color:var(--text);
+    box-shadow: inset 0 0 0 1px var(--turquoise);
+  }
+  .sliders{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px;
+    margin-top:20px;
+  }
+  .slider-group label{
+    display:flex; justify-content:space-between;
+    font-size:13px; color:var(--muted); margin-bottom:8px;
+  }
+  .slider-group b{color:var(--text); font-weight:500;}
+  input[type=range]{
+    width:100%; -webkit-appearance:none; height:4px;
+    background:var(--line); border-radius:2px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--turquoise); cursor:pointer; border:2px solid var(--bg);
+  }
+  .controls{
+    display:flex; align-items:center; gap:16px; margin-top:22px;
+  }
+  .play-btn{
+    width:56px; height:56px; border-radius:50%;
+    background:var(--turquoise); border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; transition:transform .12s, background .15s;
+  }
+  .play-btn:hover{transform:scale(1.05);}
+  .play-btn:disabled{background:var(--line); cursor:not-allowed; transform:none;}
+  .play-btn svg{width:20px; height:20px; fill:var(--bg);}
+  .viz{
+    flex:1; height:56px; display:flex; align-items:center; gap:3px;
+    overflow:hidden;
+  }
+  .viz i{
+    display:block; flex:1; min-width:2px; max-width:5px;
+    background:var(--line); border-radius:2px; height:6px;
+    transition:height .08s;
+  }
+  .status{
+    font-size:13px; color:var(--muted); margin-top:14px; min-height:18px;
+  }
+  .status.error{color:var(--danger);}
+  .actions{
+    display:flex; gap:10px; margin-top:16px;
+  }
+  .btn{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--text);
+    padding:10px 16px;
+    border-radius:10px;
+    font-family:inherit;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn:hover{border-color:var(--turquoise);}
+  .btn:disabled{opacity:.4; cursor:not-allowed;}
+  .gen-btn{
+    background:var(--gold); color:var(--bg); border:none; font-weight:700;
+    flex:1;
+  }
+  .gen-btn:disabled{background:var(--line); color:var(--muted);}
+  details{margin-top:6px;}
+  summary{
+    color:var(--muted); font-size:13px; cursor:pointer; user-select:none;
+  }
+  .settings-grid{
+    display:grid; gap:12px; margin-top:14px;
+  }
+  .settings-grid label{font-size:13px; color:var(--muted); display:block; margin-bottom:6px;}
+  .settings-grid input{
+    width:100%; background:var(--panel-2); border:1px solid var(--line);
+    color:var(--text); border-radius:10px; padding:10px 12px; font-family:inherit; font-size:14px;
+  }
+  footer{
+    text-align:center; color:var(--muted); font-size:12px; margin-top:28px; line-height:2;
+  }
+  footer a{color:var(--turquoise); text-decoration:none;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="tag">تبدیل متن به گفتار فارسی</p>
+  <h1>صدا بده به <span>کلمات</span></h1>
+  <p class="sub">متن فارسی را بنویس — با اعراب، تا تلفظ درست دربیاد — و با صدای طبیعی فرید یا دلارا بشنو.</p>
+
+  <div class="card">
+    <textarea id="text" placeholder="مثلاً: سلامِ من به شما، امیدوارم روزِ خوبی داشته باشید…"></textarea>
+    <div class="charcount"><span id="count">۰ نویسه</span><span>حداکثر پیشنهادی: ۱۵۰۰ نویسه</span></div>
+
+    <div class="voices">
+      <button class="voice-btn active" data-voice="fa-IR-FaridNeural" data-name="فرید">
+        <span class="name">فرید</span>صدای مردانه
+      </button>
+      <button class="voice-btn" data-voice="fa-IR-DilaraNeural" data-name="دلارا">
+        <span class="name">دلارا</span>صدای زنانه
+      </button>
+    </div>
+
+    <div class="sliders">
+      <div class="slider-group">
+        <label>سرعت <b id="rateVal">۱٫۰×</b></label>
+        <input type="range" id="rate" min="-40" max="40" value="0" step="5">
+      </div>
+      <div class="slider-group">
+        <label>زیر و بمی <b id="pitchVal">معمولی</b></label>
+        <input type="range" id="pitch" min="-30" max="30" value="0" step="5">
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn gen-btn" id="genBtn">تولید صدا</button>
+    </div>
+
+    <div class="controls">
+      <button class="play-btn" id="playBtn" disabled>
+        <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <div class="viz" id="viz"></div>
+      <button class="btn" id="downloadBtn" disabled>دانلود MP3</button>
+    </div>
+
+    <p class="status" id="status">برای شروع، آدرس Edge Function را در تنظیمات وارد کن.</p>
+  </div>
+
+  <details class="card" id="settingsBox">
+    <summary>تنظیمات اتصال (Supabase Edge Function)</summary>
+    <div class="settings-grid">
+      <div>
+        <label>آدرس Function (مثلاً https://xxxx.supabase.co/functions/v1/tts)</label>
+        <input type="text" id="fnUrl" placeholder="https://YOUR-PROJECT.supabase.co/functions/v1/tts">
+      </div>
+      <div>
+        <label>Supabase anon key (در صورت نیاز)</label>
+        <input type="text" id="anonKey" placeholder="eyJhbGciOi...">
+      </div>
+      <button class="btn" id="saveSettings">ذخیره</button>
+    </div>
+  </details>
+
+  <footer>
+    ساخته‌شده برای میزبانی روی GitHub Pages · موتور صدا از طریق Supabase Edge Function<br>
+    راهنمای راه‌اندازی را در فایل README.md ببین.
+  </footer>
+</div>
+
+<script>
+const els = {
+  text: document.getElementById('text'),
+  count: document.getElementById('count'),
+  genBtn: document.getElementById('genBtn'),
+  playBtn: document.getElementById('playBtn'),
+  playIcon: document.getElementById('playIcon'),
+  downloadBtn: document.getElementById('downloadBtn'),
+  status: document.getElementById('status'),
+  rate: document.getElementById('rate'),
+  pitch: document.getElementById('pitch'),
+  rateVal: document.getElementById('rateVal'),
+  pitchVal: document.getElementById('pitchVal'),
+  viz: document.getElementById('viz'),
+  fnUrl: document.getElementById('fnUrl'),
+  anonKey: document.getElementById('anonKey'),
+  saveSettings: document.getElementById('saveSettings'),
+  settingsBox: document.getElementById('settingsBox'),
+};
+
+let selectedVoice = 'fa-IR-FaridNeural';
+let audioEl = null;
+let audioUrl = null;
+let audioCtx, analyser, sourceNode, vizBars = [];
+
+// ---- persisted settings ----
+els.fnUrl.value = localStorage.getItem('tts_fn_url') || '';
+els.anonKey.value = localStorage.getItem('tts_anon_key') || '';
+if (els.fnUrl.value) { els.settingsBox.open = false; els.status.textContent = 'آماده. متن را بنویس و «تولید صدا» را بزن.'; }
+else { els.settingsBox.open = true; }
+
+els.saveSettings.onclick = () => {
+  localStorage.setItem('tts_fn_url', els.fnUrl.value.trim());
+  localStorage.setItem('tts_anon_key', els.anonKey.value.trim());
+  els.status.textContent = 'تنظیمات ذخیره شد.';
+  els.settingsBox.open = false;
+};
+
+// ---- voice select ----
+document.querySelectorAll('.voice-btn').forEach(btn => {
+  btn.onclick = () => {
+    document.querySelectorAll('.voice-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedVoice = btn.dataset.voice;
+  };
+});
+
+// ---- char count (Persian-friendly digits) ----
+const faDigits = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+els.text.addEventListener('input', () => {
+  els.count.textContent = faDigits(els.text.value.length) + ' نویسه';
+});
+
+// ---- sliders ----
+els.rate.addEventListener('input', () => {
+  const v = (1 + els.rate.value / 100).toFixed(2);
+  els.rateVal.textContent = faDigits(v) + '×';
+});
+els.pitch.addEventListener('input', () => {
+  const v = +els.pitch.value;
+  els.pitchVal.textContent = v === 0 ? 'معمولی' : (v > 0 ? '+' : '') + faDigits(v) + '%';
+});
+
+// ---- visualizer bars ----
+for (let i = 0; i < 48; i++) {
+  const bar = document.createElement('i');
+  els.viz.appendChild(bar);
+  vizBars.push(bar);
+}
+function animateViz() {
+  if (!analyser) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  const step = Math.floor(data.length / vizBars.length);
+  vizBars.forEach((bar, i) => {
+    const v = data[i * step] || 0;
+    bar.style.height = Math.max(6, (v / 255) * 56) + 'px';
+    bar.style.background = v > 20 ? 'var(--turquoise)' : 'var(--line)';
+  });
+  requestAnimationFrame(animateViz);
+}
+
+function ssmlEscape(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ---- generate ----
+els.genBtn.onclick = async () => {
+  const text = els.text.value.trim();
+  if (!text) { setStatus('یک متن بنویس تا بتونم بخونمش.', true); return; }
+  const fnUrl = localStorage.getItem('tts_fn_url');
+  if (!fnUrl) { setStatus('اول آدرس Edge Function را در تنظیمات وارد کن.', true); els.settingsBox.open = true; return; }
+
+  els.genBtn.disabled = true;
+  els.genBtn.textContent = 'در حال تولید…';
+  setStatus('در حال ساخت فایل صوتی…');
+
+  try {
+    const anonKey = localStorage.getItem('tts_anon_key');
+    const headers = { 'Content-Type': 'application/json' };
+    if (anonKey) { headers['Authorization'] = 'Bearer ' + anonKey; headers['apikey'] = anonKey; }
+
+    const res = await fetch(fnUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        text: ssmlEscape(text),
+        voice: selectedVoice,
+        rate: +els.rate.value,
+        pitch: +els.pitch.value,
+      })
+    });
+
+    if (!res.ok) {
+      const msg = await res.text().catch(() => '');
+      throw new Error('خطای سرور (' + res.status + ') ' + msg.slice(0,200));
+    }
+
+    const blob = await res.blob();
+    if (audioUrl) URL.revokeObjectURL(audioUrl);
+    audioUrl = URL.createObjectURL(blob);
+
+    if (audioEl) { audioEl.pause(); }
+    audioEl = new Audio(audioUrl);
+
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (sourceNode) sourceNode.disconnect();
+    sourceNode = audioCtx.createMediaElementSource(audioEl);
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 128;
+    sourceNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    audioEl.onplay = () => { els.playIcon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>'; animateViz(); };
+    audioEl.onpause = () => { els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+    audioEl.onended = () => { els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; vizBars.forEach(b => b.style.height='6px'); };
+
+    els.playBtn.disabled = false;
+    els.downloadBtn.disabled = false;
+    setStatus('آماده است — دکمهٔ پخش را بزن.');
+  } catch (err) {
+    setStatus(err.message || 'مشکلی پیش اومد. دوباره امتحان کن.', true);
+  } finally {
+    els.genBtn.disabled = false;
+    els.genBtn.textContent = 'تولید صدا';
+  }
+};
+
+els.playBtn.onclick = () => {
+  if (!audioEl) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  if (audioEl.paused) audioEl.play(); else audioEl.pause();
+};
+
+els.downloadBtn.onclick = () => {
+  if (!audioUrl) return;
+  const a = document.createElement('a');
+  a.href = audioUrl;
+  a.download = 'speech.mp3';
+  a.click();
+};
+
+function setStatus(msg, isError) {
+  els.status.textContent = msg;
+  els.status.className = 'status' + (isError ? ' error' : '');
+}
+</script>
+</body>
+</html>
